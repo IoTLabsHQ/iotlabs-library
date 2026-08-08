@@ -1,0 +1,16 @@
+IoTLabs	KEYWORD1
+IoTLabsValue	KEYWORD1
+IoTLabsStatus	KEYWORD1
+IoTLabsEvent	KEYWORD1
+begin	KEYWORD2
+loop	KEYWORD2
+on	KEYWORD2
+report	KEYWORD2
+connected	KEYWORD2
+provisioned	KEYWORD2
+provisioning	KEYWORD2
+startProvisioning	KEYWORD2
+resetWiFi	KEYWORD2
+factoryReset	KEYWORD2
+publishStatus	KEYWORD2
+publishTelemetrySnapshot	KEYWORD2
