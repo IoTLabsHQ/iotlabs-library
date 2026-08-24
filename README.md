@@ -1,6 +1,6 @@
 # IoTLabs Library
 
-IoTLabs Library is the C++ device library for connecting supported IoT boards and Linux devices to the IoTLabs Device Platform.
+IoTLabs Library is the C++ device library for connecting supported IoT boards and Linux devices to the IoTLabs Device Registry.
 
 It provides a stable application API for device provisioning, activation, cloud connectivity, Controls, reported state, and device runtime communication while keeping platform-specific implementation details out of application code.
 
