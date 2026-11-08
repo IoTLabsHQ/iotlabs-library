@@ -1,86 +1,120 @@
 #pragma once
 
-#if !defined(ARDUINO_ARCH_ESP32)
-#error "IoTLabs currently supports ESP32-family boards only."
+// This facade requires an Arduino-compatible core (for Arduino.h's `String`,
+// used on the public String-returning getters — see ADR-006 for why that's
+// an accepted exception to "no Arduino String" outside core). Non-Arduino
+// native builds (Linux, host-side tests) don't include this header at all;
+// they drive src/core/IoTLabsEngine.h directly with their own port
+// implementations instead — see IoTLabs internal design notes
+// for the pattern.
+//
+// The zero-arg `IoTLabs iot;` default composition (IoTLabs.cpp) is wired
+// for ESP32 (CURRENT/qualified) and ESP8266, RP2040, STM32 (CANDIDATE —
+// compiles, not yet hardware-qualified; STM32's factory covers exactly one
+// board+connectivity combination so far, no TLS — see IoTLabs internal design notes
+// and IoTLabs internal design notes
+// for what each actually covers). Building for any
+// other Arduino-compatible board still compiles this header fine; only the
+// zero-arg constructor is
+// unavailable (a clear link error if actually called) — use the advanced
+// `IoTLabs(IoTLabsDependencies)` constructor with your own platform factory
+// instead (IoTLabs internal design notes). This is
+// the one platform-detection branch this facade is allowed to own
+// ("Preprocessor rule" in that same doc); every other platform-specific
+// concern lives behind ports/adapters under src/core and src/platform.
+#if !defined(ARDUINO)
+#error "src/IoTLabs.h requires an Arduino-compatible core. For native/non-Arduino builds, drive src/core/IoTLabsEngine.h directly with your own port implementations instead of this facade."
 #endif
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <HTTPClient.h>
-#include <PubSubClient.h>
-#include <WebServer.h>
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <esp_system.h>
 
-#include "internal/IoTLabsTypes.h"
-#include "internal/IoTLabsStorage.h"
+#include "DefaultRootCA.h"
+#include "IoTLabsTypes.h"
+#include "IoTLabsValue.h"
+#include "core/ControlRouter.h"
+#include "core/Dependencies.h"
 
-class IoTLabsValue {
- public:
-  explicit IoTLabsValue(JsonVariantConst value) : _value(value) {}
-
-  bool isNull() const { return _value.isNull(); }
-  bool isBool() const { return _value.is<bool>(); }
-  bool isNumber() const {
-    return _value.is<int>() || _value.is<long>() || _value.is<float>() || _value.is<double>();
-  }
-  bool isString() const { return _value.is<const char*>(); }
-  bool isObject() const { return _value.is<JsonObjectConst>(); }
-  bool isArray() const { return _value.is<JsonArrayConst>(); }
-
-  bool asBool(bool fallback = false) const;
-  long asInt(long fallback = 0) const;
-  float asFloat(float fallback = 0.0f) const;
-  String asString(const String& fallback = String()) const;
-
-  bool has(const char* key) const;
-  IoTLabsValue operator[](const char* key) const;
-
-  JsonVariantConst raw() const { return _value; }
-
- private:
-  JsonVariantConst _value;
-};
-
+// Public, platform-neutral facade (IoTLabs internal design notes).
+// Notably absent from this header, on purpose: WiFi.h, WiFiClientSecure.h,
+// PubSubClient.h, WebServer.h, Preferences.h, esp_system.h. All ESP32/
+// third-party networking types stay behind src/platform/esp32_arduino/ and
+// src/core/IoTLabsEngine (PIMPL'd via `_impl` below), so including this
+// header never pulls platform implementation into application code.
 class IoTLabs {
  public:
-  static constexpr uint8_t MAX_CONTROLS = 24;
+  static constexpr uint8_t MAX_CONTROLS = ControlRouter::MAX_CONTROLS;
 
-  using BoolHandler = void (*)(bool value);
-  using NumberHandler = void (*)(float value);
-  using StringHandler = void (*)(const String& value);
-  using JsonHandler = void (*)(const IoTLabsValue& value);
+  using BoolHandler = ControlRouter::BoolHandler;
+  using NumberHandler = ControlRouter::NumberHandler;
+  using StringHandler = ControlRouter::StringHandler;
+  using JsonHandler = ControlRouter::JsonHandler;
   using EventHandler = void (*)(IoTLabsEvent event);
+  using CommandFinishHandler = void (*)(const char* controlId);
 
+  // Default composition: selects the ESP32 Arduino adapters at build time.
   IoTLabs();
+
+  // Advanced/test composition (IoTLabs internal design notes).
+  // Every pointer in `dependencies` must be non-null and must outlive this
+  // object; IoTLabs does not take ownership of injected adapters.
+  explicit IoTLabs(const IoTLabsDependencies& dependencies);
+
+  ~IoTLabs();
+  IoTLabs(const IoTLabs&) = delete;
+  IoTLabs& operator=(const IoTLabs&) = delete;
 
   // Build-metadata convenience API. Define the IOTLABS_* macros before including IoTLabs.h.
   inline bool begin() {
     IoTLabsConfig config;
-#ifdef IOTLABS_PROFILE_ID
-    config.profileId = IOTLABS_PROFILE_ID;
+#ifdef IOTLABS_DEVICE_TEMPLATE_ID
+    config.deviceTemplateId = IOTLABS_DEVICE_TEMPLATE_ID;
 #endif
-#ifdef IOTLABS_PROFILE_VERSION
-    config.profileVersion = IOTLABS_PROFILE_VERSION;
+#ifdef IOTLABS_DEVICE_TEMPLATE_VERSION
+    config.deviceTemplateVersion = IOTLABS_DEVICE_TEMPLATE_VERSION;
 #endif
 #ifdef IOTLABS_FIRMWARE_VERSION
     config.firmwareVersion = IOTLABS_FIRMWARE_VERSION;
 #endif
-#ifdef IOTLABS_DEVICE_PLATFORM_URL
-    config.devicePlatformUrl = IOTLABS_DEVICE_PLATFORM_URL;
+#ifdef IOTLABS_PROVISIONING_URL
+    config.provisioningUrl = IOTLABS_PROVISIONING_URL;
 #endif
-#ifdef IOTLABS_TLS_INSECURE
-    config.tlsInsecure = IOTLABS_TLS_INSECURE;
-#endif
-#ifdef IOTLABS_DEVICE_PLATFORM_ROOT_CA
-    config.devicePlatformRootCA = IOTLABS_DEVICE_PLATFORM_ROOT_CA;
+    // No #else default -- IOTLABS_PROVISIONING_URL is REQUIRED (multi-region
+    // deployments: sg./vn./us.iotlabs.vn, or self-hosted). validateConfig()
+    // rejects begin() with PROVISIONING_URL_REQUIRED if left undefined.
+#ifdef IOTLABS_PROVISIONING_ROOT_CA
+    config.provisioningRootCA = IOTLABS_PROVISIONING_ROOT_CA;
+#else
+    // Default root CA -- every current regional Device Platform host and the
+    // production MQTT brokers are Let's Encrypt-issued (verified against the
+    // live endpoints -- see DefaultRootCA.h), so this embedded ISRG Root X1
+    // validates all of them out of the box regardless of which
+    // IOTLABS_PROVISIONING_URL region is configured. tlsInsecure stays at
+    // its struct default (false): sketches no longer need to define either
+    // this macro or IOTLABS_TLS_INSECURE unless targeting a self-hosted
+    // Device Platform with a different CA.
+    config.provisioningRootCA = IOTLABS_DEFAULT_ROOT_CA;
 #endif
 #ifdef IOTLABS_MQTT_ROOT_CA
     config.mqttRootCA = IOTLABS_MQTT_ROOT_CA;
 #endif
 #ifdef IOTLABS_PROVISIONING_AP_PASSWORD
     config.provisioningApPassword = IOTLABS_PROVISIONING_AP_PASSWORD;
+#endif
+#ifdef IOTLABS_PROJECT_NAME
+    config.provisioningPageTitle = IOTLABS_PROJECT_NAME;
+#endif
+#ifdef IOTLABS_DEVICE_ID
+    config.deviceId = IOTLABS_DEVICE_ID;
+#endif
+#ifdef IOTLABS_DEVICE_ACTIVATION_SECRET
+    config.activationSecret = IOTLABS_DEVICE_ACTIVATION_SECRET;
+#endif
+#ifdef IOTLABS_WIFI_SSID
+    config.wifiSsid = IOTLABS_WIFI_SSID;
+#endif
+#ifdef IOTLABS_WIFI_PASSWORD
+    config.wifiPassword = IOTLABS_WIFI_PASSWORD;
 #endif
     return begin(config);
   }
@@ -92,6 +126,53 @@ class IoTLabs {
   bool on(const char* controlId, NumberHandler handler);
   bool on(const char* controlId, StringHandler handler);
   bool on(const char* controlId, JsonHandler handler);
+
+  // Optional convenience layer over on()/report(): declares a direct GPIO
+  // pin <-> control-id wiring once, and loop() takes care of the rest
+  // (debounce+report for inputs, digitalWrite/analogWrite for outputs on
+  // command) -- see IoTLabs internal design notes
+  // Entirely optional: sketches that never call setPinMapping() are
+  // unaffected, and on()/report() keep working exactly as before for any
+  // control not covered here (e.g. sensors read through their own driver
+  // library, like DHT/I2C -- those have no single-raw-pin semantics).
+  //
+  // Tag types below select which of the 4 overloads applies (an enum VALUE
+  // can't be used as a parameter's static type, so this is the standard
+  // tag-dispatch idiom -- same shape as std::nothrow/std::in_place).
+  struct DigitalOutTag {};
+  struct DigitalInDebouncedTag {};
+  struct AnalogInTag {};
+  struct PwmOutTag {};
+  static constexpr DigitalOutTag DIGITAL_OUT{};
+  static constexpr DigitalInDebouncedTag DIGITAL_IN_DEBOUNCED{};
+  static constexpr AnalogInTag ANALOG_IN{};
+  static constexpr PwmOutTag PWM_OUT{};
+
+  // Digital output (actuator, e.g. relay): iot.setPinMapping(id, pin, IoTLabs::DIGITAL_OUT).
+  // Boot-glitch-safe by construction: the pin's off-level is latched via
+  // digitalWrite() BEFORE pinMode(OUTPUT) runs.
+  bool setPinMapping(const char* controlId, uint8_t pin, DigitalOutTag, bool activeLow = false);
+
+  // Digital input with debounce (button/trigger or state switch). When
+  // reportValueOnRelease is set, that fixed string is reported on the
+  // active->inactive edge only (matches a momentary-button "pressed" event,
+  // e.g. examples/07's boot button); when null, the debounced bool state is
+  // reported on every edge instead (state-switch use case).
+  bool setPinMapping(const char* controlId, uint8_t pin, DigitalInDebouncedTag, bool activeLow = false,
+                      uint32_t debounceMs = 50, const char* reportValueOnRelease = nullptr);
+
+  // Analog input (raw ADC sensor -- not a library-driven sensor like DHT/I2C).
+  // Scales [rawMin,rawMax] to [scaledMin,scaledMax] and only reports once
+  // pollIntervalMs has elapsed AND the value moved by at least changeThreshold
+  // since the last report (the first sample always reports).
+  bool setPinMapping(const char* controlId, uint8_t pin, AnalogInTag, float rawMin = 0, float rawMax = 4095,
+                      float scaledMin = 0, float scaledMax = 100, uint32_t pollIntervalMs = 200,
+                      float changeThreshold = 0);
+
+  // PWM output (dimmer/analog actuator, 0-100 logical duty mapped into
+  // [pwmMin,pwmMax] via analogWrite()).
+  bool setPinMapping(const char* controlId, uint8_t pin, PwmOutTag, bool activeLow = false,
+                      uint16_t pwmMin = 0, uint16_t pwmMax = 255);
 
   bool report(const char* controlId, bool value, bool publishNow = true);
   bool report(const char* controlId, int value, bool publishNow = true);
@@ -110,142 +191,33 @@ class IoTLabs {
 
   void onEvent(EventHandler handler);
 
+  // Fires after a write Control's handler has returned successfully, right
+  // before the SDK's automatic publishStatus() snapshot. Use it to detect
+  // when a command has been dispatched — NOT as a place to report a final
+  // value for an asynchronous/non-blocking action (see the
+  // QuickStart_ServoSweep example under examples/).
+  void onCommandFinish(CommandFinishHandler handler);
+
   // Device lifecycle helpers.
   bool startProvisioning();
   bool resetWiFi();
+  bool resetIdentity();
   bool factoryReset(bool restartDevice = true);
 
   bool publishTelemetrySnapshot();
   bool publishStatus();
 
-  String hardwareId() const { return _hardwareId; }
-  String deviceId() const { return _runtime.deviceId; }
-  String profileId() const { return String(_config.profileId ? _config.profileId : ""); }
-  uint32_t profileVersion() const { return _config.profileVersion; }
-  String provisioningApName() const { return _apName; }
-  String lastError() const { return _lastError; }
+  String hardwareId() const;
+  String deviceId() const;
+  String deviceTemplateId() const;
+  uint32_t deviceTemplateVersion() const;
+  String provisioningApName() const;
+  String lastError() const;
 
   int mqttState() const;
   uint32_t reconnectDelayMs() const;
 
  private:
-  enum class HandlerKind : uint8_t { NONE, BOOL, NUMBER, STRING, JSON };
-  enum class StateKind : uint8_t { NONE, BOOL, INTEGER, NUMBER, STRING, JSON };
-
-  struct HandlerEntry {
-    bool used = false;
-    String id;
-    HandlerKind kind = HandlerKind::NONE;
-    BoolHandler boolHandler = nullptr;
-    NumberHandler numberHandler = nullptr;
-    StringHandler stringHandler = nullptr;
-    JsonHandler jsonHandler = nullptr;
-  };
-
-  struct StateEntry {
-    bool used = false;
-    String id;
-    StateKind kind = StateKind::NONE;
-    bool boolValue = false;
-    long intValue = 0;
-    double numberValue = 0.0;
-    String stringValue;
-    String jsonValue;
-  };
-
-  IoTLabsConfig _config;
-  IoTLabsStorage _storage;
-  IoTLabsRuntimeIdentity _runtime;
-
-  WiFiClientSecure _mqttSecureClient;
-  PubSubClient _mqtt;
-  WebServer _provisionServer;
-
-  HandlerEntry _handlers[MAX_CONTROLS];
-  StateEntry _states[MAX_CONTROLS];
-
-  EventHandler _eventHandler = nullptr;
-  IoTLabsStatus _status = IoTLabsStatus::BOOT;
-
-  bool _started = false;
-  bool _provisioningActive = false;
-  bool _seenWifiConnected = false;
-  bool _seenMqttConnected = false;
-  bool _wifiAttemptActive = false;
-  bool _activationBlocked = false;
-  bool _mqttConfigured = false;
-  bool _provisionRoutesConfigured = false;
-
-  String _hardwareId;
-  String _apName;
-  String _lastError;
-  String _wifiSsid;
-  String _wifiPassword;
-  String _activationToken;
-
-  String _topicTelemetry;
-  String _topicCmd;
-  String _topicStatus;
-  String _topicPing;
-
-  uint32_t _wifiBackoffMs = 1000;
-  uint32_t _mqttBackoffMs = 1000;
-  uint32_t _activationBackoffMs = 2000;
-
-  uint32_t _nextWifiAttemptAt = 0;
-  uint32_t _wifiAttemptStartedAt = 0;
-  uint32_t _nextMqttAttemptAt = 0;
-  uint32_t _nextActivationAttemptAt = 0;
-  uint32_t _lastTelemetryAt = 0;
-  uint32_t _lastStatusAt = 0;
-
-  static IoTLabs* _instance;
-
-  static bool due(uint32_t now, uint32_t deadline);
-  static void mqttCallbackThunk(char* topic, byte* payload, unsigned int length);
-
-  void emit(IoTLabsEvent event);
-  void setStatus(IoTLabsStatus status);
-  void setError(const String& code);
-
-  bool validateConfig();
-  void loadPersistentState();
-  void generateHardwareId();
-
-  bool startProvisioningPortal();
-  void stopProvisioningPortal();
-  void configureProvisioningRoutes();
-  void handleDeviceInfoRequest();
-  void handleWifiNetworksRequest();
-  void handleProvisionRequest();
-  void sendLocalError(int httpStatus, const char* code, const char* message);
-
-  void serviceWiFi(uint32_t now);
-  void startWifiAttempt(uint32_t now);
-  void serviceActivation(uint32_t now);
-  bool attemptActivation();
-  bool activationErrorIsBlocking(const String& code) const;
-  String activationUrl() const;
-
-  bool configureMqtt();
-  void buildTopics();
-  void serviceMqtt(uint32_t now);
-  bool connectMqtt();
-  void onMqttConnected();
-
-  void handleMessage(char* topic, byte* payload, unsigned int length);
-  void handleCommand(const String& message);
-  void handlePing(const String& message);
-
-  HandlerEntry* findHandler(const String& controlId);
-  HandlerEntry* findOrCreateHandler(const String& controlId);
-  StateEntry* findState(const String& controlId);
-  StateEntry* findOrCreateState(const String& controlId);
-
-  bool reportState(StateEntry& state, bool publishNow);
-  bool publishSingleState(const StateEntry& state);
-  void appendState(JsonDocument& doc, const StateEntry& state) const;
-  bool publishJson(const String& topic, JsonDocument& doc, bool retained = false);
-
-  static bool parseBool(JsonVariantConst value, bool& result);
+  struct Impl;
+  Impl* _impl;
 };

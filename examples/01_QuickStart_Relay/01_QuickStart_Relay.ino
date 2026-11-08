@@ -8,11 +8,13 @@
     control_1_on_off
 */
 
-#define IOTLABS_PROFILE_ID "PROF_REPLACE_ME"
-#define IOTLABS_PROFILE_VERSION 1
+#define IOTLABS_DEVICE_TEMPLATE_ID "PROF_REPLACE_ME"
+#define IOTLABS_DEVICE_TEMPLATE_VERSION 1
+#define IOTLABS_PROVISIONING_URL "https://vn.iotlabs.vn"
 #define IOTLABS_FIRMWARE_VERSION "1.0.0"
-#define IOTLABS_DEVICE_PLATFORM_URL "https://YOUR_DEVICE_PLATFORM_HOST"
-#define IOTLABS_TLS_INSECURE true   // Development only. Configure CA for production.
+#define IOTLABS_DEVICE_ID "DEV_your_device_id_here"  // REQUIRED: replace with your own Device's id from Console (create a Device there first — id looks like DEV_xxxxxxxx)
+// #define IOTLABS_WIFI_SSID "your-wifi-ssid"        // optional: combined with the two macros above, skips the SoftAP portal entirely
+// #define IOTLABS_WIFI_PASSWORD "your-wifi-password" // leave undefined/empty for an open network
 
 #include <IoTLabs.h>
 

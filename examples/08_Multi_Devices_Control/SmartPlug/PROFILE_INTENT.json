@@ -1,0 +1,8 @@
+{
+  "name": "Multi Devices — SmartPlug",
+  "firmwareFamily": "iotlabs-multi-devices-control",
+  "controls": [
+    { "name": "Bật/tắt ổ cắm", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Nút vật lý", "typeKey": "button", "access": "trigger" }
+  ]
+}

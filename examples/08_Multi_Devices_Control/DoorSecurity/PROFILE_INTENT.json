@@ -1,0 +1,12 @@
+{
+  "name": "Multi Devices — DoorSecurity",
+  "firmwareFamily": "iotlabs-multi-devices-control",
+  "controls": [
+    { "name": "Trạng thái cửa", "typeKey": "text", "access": "read" },
+    { "name": "Chế độ bảo vệ", "typeKey": "select", "access": "read_write", "config": { "options": ["disarmed", "home", "away"] } },
+    { "name": "Còi cảnh báo", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Thời gian cửa đang mở", "typeKey": "value", "access": "read", "config": { "unit": "s" } },
+    { "name": "Số lần mở cửa", "typeKey": "value", "access": "read", "config": { "unit": "lần" } },
+    { "name": "Sự kiện đột nhập", "typeKey": "text", "access": "read" }
+  ]
+}

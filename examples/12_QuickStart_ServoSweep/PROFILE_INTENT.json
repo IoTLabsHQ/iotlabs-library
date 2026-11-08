@@ -1,0 +1,17 @@
+{
+  "name": "ESP32-C3 SuperMini Servo Sweep QuickStart",
+  "firmwareFamily": "iotlabs-quickstart-servo-sweep",
+  "controls": [
+    {
+      "name": "Sweep",
+      "typeKey": "on_off",
+      "access": "read_write"
+    },
+    {
+      "name": "Servo Angle",
+      "typeKey": "value",
+      "access": "read",
+      "config": { "unit": "deg", "min": 0, "max": 180 }
+    }
+  ]
+}

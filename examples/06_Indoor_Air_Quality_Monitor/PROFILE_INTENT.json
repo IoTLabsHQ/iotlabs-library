@@ -1,0 +1,13 @@
+{
+  "name": "ESP32 Indoor Air Quality Monitor",
+  "firmwareFamily": "iotlabs-indoor-air-quality-monitor",
+  "controls": [
+    {"name": "CO2", "typeKey": "value", "access": "read", "config": {"unit": "ppm", "min": 400, "max": 5000}},
+    {"name": "PM2.5", "typeKey": "value", "access": "read", "config": {"unit": "µg/m³", "min": 0, "max": 500}},
+    {"name": "Temperature", "typeKey": "value", "access": "read", "config": {"unit": "C"}},
+    {"name": "Humidity", "typeKey": "value", "access": "read", "config": {"unit": "%", "min": 0, "max": 100}},
+    {"name": "Air Quality Status", "typeKey": "text", "access": "read"},
+    {"name": "Buzzer Enable", "typeKey": "on_off", "access": "read_write"},
+    {"name": "Mute Alert", "typeKey": "button", "access": "trigger"}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Multi Devices — SmartLamp",
+  "firmwareFamily": "iotlabs-multi-devices-control",
+  "controls": [
+    { "name": "Bật/tắt đèn", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Độ sáng", "typeKey": "value", "access": "read_write", "config": { "unit": "%", "min": 0, "max": 100 } },
+    { "name": "Chế độ chiếu sáng", "typeKey": "select", "access": "read_write", "config": { "options": ["reading", "relax", "night", "eco"] } },
+    { "name": "Nút vật lý", "typeKey": "button", "access": "trigger" }
+  ]
+}

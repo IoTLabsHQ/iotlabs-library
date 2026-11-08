@@ -1,0 +1,12 @@
+{
+  "name": "Solar Energy Monitoring & Control",
+  "firmwareFamily": "iotlabs-solar-energy-monitoring-control",
+  "controls": [
+    { "name": "Điện áp PV", "typeKey": "value", "access": "read", "config": { "unit": "V" } },
+    { "name": "Dòng điện PV", "typeKey": "value", "access": "read", "config": { "unit": "mA" } },
+    { "name": "Công suất PV", "typeKey": "value", "access": "read", "config": { "unit": "mW" } },
+    { "name": "Điện áp Ắc quy", "typeKey": "value", "access": "read", "config": { "unit": "V", "min": 0, "max": 15 } },
+    { "name": "Tải DC", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Chế độ vận hành", "typeKey": "select", "access": "read_write", "config": { "options": ["auto", "manual"] } }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "Priority Load Shedding Controller",
+  "firmwareFamily": "iotlabs-priority-load-shedding-controller",
+  "controls": [
+    { "name": "Mất điện lưới", "typeKey": "on_off", "access": "read" },
+    { "name": "Tải Thiết yếu (Essential)", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Tải Quan trọng (Important)", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Tải Tuỳ chọn (Optional)", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Tải Không thiết yếu (Non-essential)", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Dòng điện backup", "typeKey": "value", "access": "read", "config": { "unit": "A" } },
+    { "name": "Ngưỡng dòng điện", "typeKey": "value", "access": "read_write", "config": { "unit": "A", "min": 1, "max": 15 } },
+    { "name": "Còi báo động", "typeKey": "on_off", "access": "read" },
+    { "name": "Trạng thái hệ thống", "typeKey": "text", "access": "read" }
+  ]
+}

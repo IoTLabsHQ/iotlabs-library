@@ -48,6 +48,10 @@ Application projects should depend only on the public IoTLabs interface exposed 
 
 Platform-specific implementation details are intentionally kept out of project code.
 
+## Advanced composition
+
+Most sketches only ever need `IoTLabs iot;`. Advanced projects and tests may inject their own port implementations (clock, network, MQTT transport, storage, ...) via `IoTLabs iot(dependencies);`. See `examples/04_Advanced_CustomDependencies`.
+
 ## Documentation
 
 User guides for Arduino, PlatformIO, supported boards, provisioning, and other platforms are maintained separately from this source repository.
