@@ -1,0 +1,11 @@
+{
+  "name": "ESP32-C3 SuperMini Blink LED QuickStart",
+  "firmwareFamily": "iotlabs-quickstart-blink-led",
+  "controls": [
+    {
+      "name": "LED",
+      "typeKey": "on_off",
+      "access": "read_write"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "ESP32-C3 Relay DHT11 OLED Button QuickStart",
+  "firmwareFamily": "iotlabs-quickstart-relay-dht11-oled-button",
+  "controls": [
+    {"name": "Relay", "typeKey": "on_off", "access": "read_write"},
+    {"name": "Temperature", "typeKey": "value", "access": "read", "config": {"unit": "C"}},
+    {"name": "Humidity", "typeKey": "value", "access": "read", "config": {"unit": "%", "min": 0, "max": 100}},
+    {"name": "Button", "typeKey": "button", "access": "trigger"}
+  ]
+}

@@ -12,3 +12,7 @@ build/
 .vscode/
 .idea/
 coverage/
+
+# Real per-tester device profile/Wi-Fi config generated locally
+# (never the .example.h template).
+iotlabs_profile.h

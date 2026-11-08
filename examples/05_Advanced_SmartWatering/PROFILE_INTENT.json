@@ -1,0 +1,13 @@
+{
+  "name": "ESP32 Smart Watering",
+  "firmwareFamily": "iotlabs-advanced-smart-watering",
+  "controls": [
+    {"name": "Temperature", "typeKey": "value", "access": "read", "config": {"unit": "C"}},
+    {"name": "Air Humidity", "typeKey": "value", "access": "read", "config": {"unit": "%", "min": 0, "max": 100}},
+    {"name": "Soil Moisture", "typeKey": "value", "access": "read", "config": {"unit": "%", "min": 0, "max": 100}},
+    {"name": "Pump (Auto/Manual)", "typeKey": "auto_or_manual", "access": "read_write", "config": {"schema": {"state": {"type": "string", "options": ["on", "off"]}, "source": {"type": "string", "options": ["auto", "manual"], "readOnly": true}}}},
+    {"name": "Soil ON Threshold", "typeKey": "value", "access": "read_write", "config": {"unit": "%", "min": 0, "max": 100}},
+    {"name": "Soil OFF Threshold", "typeKey": "value", "access": "read_write", "config": {"unit": "%", "min": 0, "max": 100}},
+    {"name": "Manual Button", "typeKey": "button", "access": "trigger"}
+  ]
+}

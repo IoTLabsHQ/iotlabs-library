@@ -1,0 +1,11 @@
+{
+  "name": "ESP32-C3 Advanced Custom Dependencies",
+  "firmwareFamily": "iotlabs-advanced-custom-dependencies",
+  "controls": [
+    {
+      "name": "Relay",
+      "typeKey": "on_off",
+      "access": "read_write"
+    }
+  ]
+}

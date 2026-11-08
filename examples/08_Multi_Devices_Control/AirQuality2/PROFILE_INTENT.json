@@ -1,0 +1,12 @@
+{
+  "name": "Multi Devices — AirQuality",
+  "firmwareFamily": "iotlabs-multi-devices-control",
+  "controls": [
+    { "name": "CO2", "typeKey": "value", "access": "read", "config": { "unit": "ppm", "min": 400, "max": 5000 } },
+    { "name": "Nhiệt độ", "typeKey": "value", "access": "read", "config": { "unit": "C" } },
+    { "name": "Độ ẩm", "typeKey": "value", "access": "read", "config": { "unit": "%", "min": 0, "max": 100 } },
+    { "name": "Mức chất lượng không khí", "typeKey": "text", "access": "read" },
+    { "name": "Cảnh báo", "typeKey": "text", "access": "read" },
+    { "name": "Trạng thái bổ sung", "typeKey": "text", "access": "read" }
+  ]
+}

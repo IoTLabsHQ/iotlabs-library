@@ -1,0 +1,11 @@
+{
+  "name": "ESP32-C3 Relay QuickStart",
+  "firmwareFamily": "iotlabs-quickstart-relay",
+  "controls": [
+    {
+      "name": "Relay",
+      "typeKey": "on_off",
+      "access": "read_write"
+    }
+  ]
+}

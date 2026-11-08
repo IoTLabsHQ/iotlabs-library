@@ -1,0 +1,10 @@
+{
+  "name": "ESP32 Smart Home Node",
+  "firmwareFamily": "iotlabs-smart-home-complete",
+  "controls": [
+    { "name": "Bật/tắt tải", "typeKey": "on_off", "access": "read_write" },
+    { "name": "Nút vật lý", "typeKey": "button", "access": "trigger" },
+    { "name": "Nhiệt độ", "typeKey": "value", "access": "read", "config": { "unit": "C" } },
+    { "name": "Độ ẩm", "typeKey": "value", "access": "read", "config": { "unit": "%" } }
+  ]
+}
