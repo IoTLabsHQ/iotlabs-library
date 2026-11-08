@@ -1,14 +1,24 @@
 {
   "name": "IoTLabs",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.3",
   "description": "IoTLabs C++ Library for IoTLabs Device Platform connectivity and provisioning.",
-  "keywords": ["iot", "iotlabs", "mqtt", "provisioning", "esp32"],
+  "keywords": [
+    "iot",
+    "iotlabs",
+    "mqtt",
+    "provisioning",
+    "esp32"
+  ],
   "homepage": "https://maker.iotlabs.vn",
   "repository": {
     "type": "git",
     "url": "https://github.com/iotlabs-vn/iotlabs-library.git"
   },
-  "frameworks": ["arduino"],
-  "platforms": ["espressif32"],
+  "frameworks": [
+    "arduino"
+  ],
+  "platforms": [
+    "espressif32"
+  ],
   "headers": "IoTLabs.h"
 }
